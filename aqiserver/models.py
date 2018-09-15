@@ -55,7 +55,7 @@ class City(models.Model):
     gdp = models.FloatField(blank=True, null=True)
     pop = models.IntegerField(blank=True, null=True)
     area = models.FloatField(blank=True, null=True)
-    # province = models.ForeignKey('Province', models.DO_NOTHING, db_column='province')
+    province = models.ForeignKey('Province', models.DO_NOTHING, db_column='province')
     objects = models.Manager()
 
     class Meta:
