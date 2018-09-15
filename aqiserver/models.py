@@ -25,7 +25,6 @@ class Aqidaydata(models.Model):
     objects = models.Manager()
 
     class Meta:
-        managed = False
         db_table = 'aqidaydata'
 
 
@@ -46,7 +45,6 @@ class Aqimonthdata(models.Model):
     objects = models.Manager()
 
     class Meta:
-        managed = False
         db_table = 'aqimonthdata'
 
 
@@ -61,7 +59,6 @@ class City(models.Model):
     objects = models.Manager()
 
     class Meta:
-        managed = False
         db_table = 'city'
 
 
@@ -70,5 +67,4 @@ class Province(models.Model):
     objects = models.Manager()
 
     class Meta:
-        managed = False
         db_table = 'province'
