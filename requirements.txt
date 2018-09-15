@@ -1,5 +1,6 @@
-
 Django==2.1.1
 django-cors-headers==2.4.0
 djangorestframework==3.8.2
 psycopg2==2.7.5
+uWSGI==2.0.17
+

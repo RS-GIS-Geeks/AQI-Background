@@ -25,7 +25,6 @@ class Aqidaydata(models.Model):
     objects = models.Manager()
 
     class Meta:
-        managed = False
         db_table = 'aqidaydata'
 
 
@@ -46,7 +45,6 @@ class Aqimonthdata(models.Model):
     objects = models.Manager()
 
     class Meta:
-        managed = False
         db_table = 'aqimonthdata'
 
 
@@ -57,8 +55,16 @@ class City(models.Model):
     gdp = models.FloatField(blank=True, null=True)
     pop = models.IntegerField(blank=True, null=True)
     area = models.FloatField(blank=True, null=True)
+    province = models.ForeignKey('Province', models.DO_NOTHING, db_column='province')
     objects = models.Manager()
 
     class Meta:
-        managed = False
         db_table = 'city'
+
+
+class Province(models.Model):
+    provincename = models.CharField(max_length=40)
+    objects = models.Manager()
+
+    class Meta:
+        db_table = 'province'
