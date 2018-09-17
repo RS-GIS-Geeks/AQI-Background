@@ -183,14 +183,17 @@ class gettop10cityViewSet(viewsets.ViewSet):
             pm25_list.append(data['pm25'])
             so2_list.append(data['so2'])
             latlng_list.append([cityObject.lat, cityObject.lon])
+        sum = 0
+        for aqi in aqi_list:
+            sum += aqi
         return_dist = {
             'city': city_list,
             'cityId': cityId_list,
-            'aqi': pm25_list,
+            'aqi': aqi_list,
             'pm2.5': pm25_list,
             'so2': so2_list,
             'latlng': latlng_list,
-            'average': 110
+            'average': sum / len(aqi_list)
         }
         # print(str(return_dist))
         return Response(return_dist)
