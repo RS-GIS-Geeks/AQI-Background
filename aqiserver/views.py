@@ -4,9 +4,13 @@ from .serializers import *
 from .models import *
 from rest_framework.response import Response
 from collections import OrderedDict
-from django.db.models import Avg, Max, Min, Count
+from django.db.models import Avg, Max, Min, Count, Sum
 
 # Create your views here.
+
+class ProvinceViewSet(viewsets.ModelViewSet):
+    queryset = Province.objects.all()
+    serializer_class = ProvinceSerializer
 
 class CityViewSet(viewsets.ModelViewSet):
     queryset = City.objects.all()
@@ -158,22 +162,69 @@ class getmonthlevelanddataViewSet(viewsets.ViewSet):
         return_list.append(aqimean_list)
         return Response(return_list)
 
+class gettop10cityViewSet(viewsets.ViewSet):
+
+    def list(self, request):
+        date = request.GET["date"]
+        return_dist = []
+        aqi_list = []
+        cityId_list = []
+        city_list = []
+        pm25_list = []
+        so2_list = []
+        latlng_list = []
+        aqidata_on_date = Aqidaydata.objects.filter(time_point=date).order_by('-aqi').values()[:10]
+        for data in aqidata_on_date:
+            cityId = data['city_id']
+            cityObject = City.objects.get(id=cityId)
+            cityId_list.append(cityId)
+            city_list.append(cityObject.cityname)
+            aqi_list.append(data['aqi'])
+            pm25_list.append(data['pm25'])
+            so2_list.append(data['so2'])
+            latlng_list.append([cityObject.lat, cityObject.lon])
+        return_dist = {
+            'city': city_list,
+            'cityId': cityId_list,
+            'aqi': pm25_list,
+            'pm2.5': pm25_list,
+            'so2': so2_list,
+            'latlng': latlng_list,
+            'average': 110
+        }
+        # print(str(return_dist))
+        return Response(return_dist)
+
+class get3avgindexofcityViewSet(viewsets.ViewSet):
+
+    def list(self, request):
+        city = request.GET["city"]
+        year = request.GET["year"]
+        aqidata_on_date = Aqidaydata.objects.filter(time_point__startswith=year).filter(city__id=city).values('city').annotate(Avg('aqi'), Avg('pm25'), Avg('so2'))[0]
+        result = {
+            'aqi': aqidata_on_date['aqi__avg'],
+            'pm25': aqidata_on_date['pm25__avg'],
+            'so2': aqidata_on_date['so2__avg']
+        }
+        return Response(result)
 
 
+class getprovincesnamesViewSet(viewsets.ModelViewSet):
+
+    def list(self, request):
+        queryset = Province.objects.all().values()
+        return_list = []
+        for query_item in queryset:
+            return_list.append({
+                'id': query_item['id'],
+                'name': query_item['provincename']
+            })
+        return Response(return_list)
 
 
+# class getprovincesdataViewSet(viewsets.ModelViewSet):
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#     def list(self, request):
+#         provinceId = request.GET('provinceId')
+        
+#         return Response(return_list)
