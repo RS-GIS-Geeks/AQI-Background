@@ -222,9 +222,24 @@ class getprovincesnamesViewSet(viewsets.ModelViewSet):
         return Response(return_list)
 
 
-# class getprovincesdataViewSet(viewsets.ModelViewSet):
+class getprovincesdataViewSet(viewsets.ModelViewSet):
 
-#     def list(self, request):
-#         provinceId = request.GET('provinceId')
-        
-#         return Response(return_list)
+    def list(self, request):
+        provinceId = request.GET['province']
+        city_list = City.objects.filter(province__id=provinceId).values()
+        year_list = [2014, 2015, 2016, 2017]
+        data_list = []
+        for city in city_list:
+            data = []
+            for year in year_list:
+                all_month_data = Aqimonthdata.objects.filter(city=city['id'], time_point__startswith=year).values('city').annotate(Avg('aqi'))
+                for month_data in all_month_data:
+                    data.append(round(month_data['aqi__avg'], 2))
+            data_list.append({
+                'name': city['cityname'],
+                'data': data
+            })
+        return Response({
+            'xaxis': year_list,
+            'datalist': data_list
+        })
