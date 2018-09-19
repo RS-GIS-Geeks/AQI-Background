@@ -47,6 +47,8 @@ class getdailynationaldataViewSet(viewsets.ViewSet):
             ]
             in_data["level"] = item["quality"]
             return_list.append(in_data)
+        return_list.sort(key=lambda x: x["value"][0], reverse=True)
+        # return Response()
         return Response(return_list)
 
 class getyearaqidataViewSet(viewsets.ViewSet):
