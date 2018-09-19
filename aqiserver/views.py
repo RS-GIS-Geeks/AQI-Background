@@ -29,7 +29,7 @@ class getdailynationaldataViewSet(viewsets.ViewSet):
     def list(self, request):
         date = request.GET["date"]
         data = Aqidaydata.objects.filter(time_point="{}".format(date))
-        serializer = AqimonthdataSerializer(data, many=True)
+        serializer = AqidaydataSerializer(data, many=True)
         return_list = []
         for item in serializer.data:
             in_data = OrderedDict()
@@ -48,7 +48,6 @@ class getdailynationaldataViewSet(viewsets.ViewSet):
             in_data["level"] = item["quality"]
             return_list.append(in_data)
         return_list.sort(key=lambda x: x["value"][0], reverse=True)
-        # return Response()
         return Response(return_list)
 
 class getyearaqidataViewSet(viewsets.ViewSet):
@@ -248,3 +247,29 @@ class getprovincesdataViewSet(viewsets.ModelViewSet):
             'xaxis': year_list,
             'datalist': data_list
         })
+
+class getmonthnationaldataViewSet(viewsets.ModelViewSet):
+
+    def list(self, request):
+        date = request.GET["date"]
+        data = Aqimonthdata.objects.filter(time_point="{}".format(date))
+        serializer = AqimonthdataSerializer(data, many=True)
+        return_list = []
+        for item in serializer.data:
+            in_data = OrderedDict()
+            in_data["id"] = item["city"]["id"]
+            in_data["name"] = item["city"]["cityname"]
+            in_data["date"] = OrderedDict(year=date.split('-')[0], month=date.split('-')[1])
+            in_data["position"] = [item["city"]["lon"], item["city"]["lat"]]
+            in_data["value"] = [
+                item["aqi"],
+                item["pm25"],
+                item["pm10"],
+                item["co"],
+                item["no2"],
+                item["so2"]
+            ]
+            in_data["level"] = item["quality"]
+            return_list.append(in_data)
+        return_list.sort(key=lambda x: x["value"][0], reverse=True)
+        return Response(return_list)

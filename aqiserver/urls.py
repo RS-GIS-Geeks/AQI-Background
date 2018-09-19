@@ -20,6 +20,7 @@ router.register(r'gettop10city', views.gettop10cityViewSet, base_name='gettop10c
 router.register(r'get3avgindexofcity', views.get3avgindexofcityViewSet, base_name='get3avgindexofcity')
 router.register(r'getprovincesnames', views.getprovincesnamesViewSet, base_name='getprovincesnames')
 router.register(r'getprovincesdata', views.getprovincesdataViewSet, base_name='getprovincesdata')
+router.register(r'getmonthnationaldata', views.getmonthnationaldataViewSet, base_name='getmonthnationaldata')
 
 urlpatterns = [
     path('', include(router.urls)),
