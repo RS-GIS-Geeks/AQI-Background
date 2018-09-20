@@ -174,7 +174,7 @@ class gettop10cityViewSet(viewsets.ViewSet):
         pm25_list = []
         so2_list = []
         latlng_list = []
-        aqidata_on_date = Aqidaydata.objects.filter(time_point=date).order_by('-aqi').values()[:10]
+        aqidata_on_date = Aqidaydata.objects.filter(time_point=date).order_by('-aqi').values()[:8]
         for data in aqidata_on_date:
             cityId = data['city_id']
             cityObject = City.objects.get(id=cityId)
