@@ -4,9 +4,13 @@ from .serializers import *
 from .models import *
 from rest_framework.response import Response
 from collections import OrderedDict
-from django.db.models import Avg, Max, Min, Count
+from django.db.models import Avg, Max, Min, Count, Sum
 
 # Create your views here.
+
+class ProvinceViewSet(viewsets.ModelViewSet):
+    queryset = Province.objects.all()
+    serializer_class = ProvinceSerializer
 
 class CityViewSet(viewsets.ModelViewSet):
     queryset = City.objects.all()
@@ -25,7 +29,7 @@ class getdailynationaldataViewSet(viewsets.ViewSet):
     def list(self, request):
         date = request.GET["date"]
         data = Aqidaydata.objects.filter(time_point="{}".format(date))
-        serializer = AqimonthdataSerializer(data, many=True)
+        serializer = AqidaydataSerializer(data, many=True)
         return_list = []
         for item in serializer.data:
             in_data = OrderedDict()
@@ -43,6 +47,7 @@ class getdailynationaldataViewSet(viewsets.ViewSet):
             ]
             in_data["level"] = item["quality"]
             return_list.append(in_data)
+        return_list.sort(key=lambda x: x["value"][0], reverse=True)
         return Response(return_list)
 
 class getyearaqidataViewSet(viewsets.ViewSet):
@@ -158,22 +163,114 @@ class getmonthlevelanddataViewSet(viewsets.ViewSet):
         return_list.append(aqimean_list)
         return Response(return_list)
 
+class gettop10cityViewSet(viewsets.ViewSet):
+
+    def list(self, request):
+        date = request.GET["date"]
+        return_dist = []
+        aqi_list = []
+        cityId_list = []
+        city_list = []
+        pm25_list = []
+        so2_list = []
+        latlng_list = []
+        aqidata_on_date = Aqidaydata.objects.filter(time_point=date).order_by('-aqi').values()[:8]
+        for data in aqidata_on_date:
+            cityId = data['city_id']
+            cityObject = City.objects.get(id=cityId)
+            cityId_list.append(cityId)
+            city_list.append(cityObject.cityname)
+            aqi_list.append(data['aqi'])
+            pm25_list.append(data['pm25'])
+            so2_list.append(data['so2'])
+            latlng_list.append([cityObject.lat, cityObject.lon])
+        max = 0
+        for aqi in aqi_list:
+            if max < aqi:
+                max = aqi
+        return_dist = {
+            'city': city_list,
+            'cityId': cityId_list,
+            'aqi': aqi_list,
+            'pm2.5': pm25_list,
+            'so2': so2_list,
+            'latlng': latlng_list,
+            'average': max
+        }
+        # print(str(return_dist))
+        return Response(return_dist)
+
+class get3avgindexofcityViewSet(viewsets.ViewSet):
+
+    def list(self, request):
+        city = request.GET["city"]
+        year = request.GET["year"]
+        aqidata_on_date = Aqidaydata.objects.filter(time_point__startswith=year).filter(city__id=city).values('city').annotate(Avg('aqi'), Avg('pm25'), Avg('so2'))[0]
+        result = {
+            'aqi': aqidata_on_date['aqi__avg'],
+            'pm25': aqidata_on_date['pm25__avg'],
+            'so2': aqidata_on_date['so2__avg']
+        }
+        return Response(result)
 
 
+class getprovincesnamesViewSet(viewsets.ModelViewSet):
+
+    def list(self, request):
+        queryset = Province.objects.all().values()
+        return_list = []
+        for query_item in queryset:
+            return_list.append({
+                'id': query_item['id'],
+                'name': query_item['provincename']
+            })
+        return Response(return_list)
 
 
+class getprovincesdataViewSet(viewsets.ModelViewSet):
 
+    def list(self, request):
+        provinceId = request.GET['province']
+        city_list = City.objects.filter(province__id=provinceId).values()
+        year_list = [2014, 2015, 2016, 2017]
+        data_list = []
+        for city in city_list:
+            data = []
+            for year in year_list:
+                all_month_data = Aqimonthdata.objects.filter(city=city['id'], time_point__startswith=year).values('city').annotate(Avg('aqi'))
+                for month_data in all_month_data:
+                    data.append(round(month_data['aqi__avg'], 2))
+            data_list.append({
+                'name': city['cityname'],
+                'data': data
+            })
+        return Response({
+            'xaxis': year_list,
+            'datalist': data_list
+        })
 
+class getmonthnationaldataViewSet(viewsets.ModelViewSet):
 
-
-
-
-
-
-
-
-
-
-
-
-
+    def list(self, request):
+        date = request.GET["date"]
+        data = Aqimonthdata.objects.filter(time_point="{}".format(date))
+        serializer = AqimonthdataSerializer(data, many=True)
+        return_list = []
+        for item in serializer.data:
+            in_data = OrderedDict()
+            in_data["id"] = item["city"]["id"]
+            in_data["name"] = item["city"]["cityname"]
+            in_data["date"] = OrderedDict(year=date.split('-')[0], month=date.split('-')[1])
+            in_data["position"] = [item["city"]["lon"], item["city"]["lat"]]
+            in_data["value"] = [
+                item["aqi"],
+                item["pm25"],
+                item["pm10"],
+                item["co"],
+                item["no2"],
+                item["so2"]
+            ]
+            in_data["level"] = item["quality"]
+            return_list.append(in_data)
+        return_list.sort(key=lambda x: x["value"][0], reverse=True)
+        return Response(return_list)
